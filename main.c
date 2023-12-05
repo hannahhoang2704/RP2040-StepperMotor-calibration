@@ -1,4 +1,13 @@
-
+//Implement a program that reads commands from standard input. The commands to implement are:
+//status – prints the state of the system:
+//        Is it calibrated?
+//        Number of steps per revolution or “not available” if not calibrated
+//calib – perform calibration
+//        Calibration should run the motor in one direction until a falling edge is seen in the opto fork input and then
+//        count number of steps to the next falling edge. To get more accurate results count the number of steps per
+//        revolution three times and take the average of the values.
+//run N – N is an integer that may be omitted. Runs the motor N times 1/8th of a revolution. If N is omitted run one full
+//revolution. “Run 8” should also run one full revolution.
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -74,7 +83,7 @@ void runStepperMotor(uint *row, bool calibrating, int *revolution_steps, uint ti
 int main() {
 
     initializePins();
-    //for check user input
+    //for checking user input
     char input_command[STR_SIZE];
     memset(input_command, 0, sizeof(input_command));
     char chr;
@@ -107,10 +116,8 @@ int main() {
                     }
                     runStepperMotor(&row, false, &revolution_steps, times);
                 } else if (strcmp("status", input_command)==0) {
-//                    printf("status command\n");
                     status(calibrate_completed, revolution_steps);
                 } else if (strcmp("calib", input_command)==0) {
-//                    printf("Calib command\n");
                     calib(&row, &revolution_steps, &calibrate_completed);
                 }
 
@@ -145,12 +152,10 @@ void calib(uint *row, int *revolution_steps, int *calib_completed){
         sleep_ms(1500);
         calibrating=true;
         *revolution_steps = 0;
-        while(!gpio_get(OPTO_FORK)){
+        while(!gpio_get(OPTO_FORK)){        //find a following rising edge
             runStepperMotor(row, calibrating, revolution_steps, 1);
         }
-//        printf("Found the rising edge, opto_state is %d\n", opto_state);
-//        sleep_ms(5000);
-        while(gpio_get(OPTO_FORK)){
+        while(gpio_get(OPTO_FORK)){         //find a next falling edge and complete 1 full revolution
             runStepperMotor(row, calibrating, revolution_steps, 1);
         }
         calibrating = false;
@@ -227,13 +232,8 @@ void initializePins(void){
     gpio_init(IN4);
     gpio_set_dir(IN4, GPIO_OUT);
 
-    //Opto fork and Piezo sensor
+    //Opto fork
     gpio_init(OPTO_FORK);
     gpio_set_dir(OPTO_FORK, GPIO_IN);
     gpio_pull_up(OPTO_FORK);
-
-//    gpio_init(PIEZO_SENSOR);
-//    gpio_set_dir(PIEZO_SENSOR, GPIO_IN);
-//    gpio_pull_up(PIEZO_SENSOR);
-
 }
